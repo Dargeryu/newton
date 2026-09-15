@@ -14,7 +14,8 @@ export interface LlmEngine {
 const MODEL = process.env.LEARNMATE_MODEL ?? "gpt-4o-mini";
 
 function openAiEngine(apiKey: string): LlmEngine {
-  const client = new OpenAI({ apiKey });
+  const baseURL = process.env.OPENAI_BASE_URL;
+  const client = new OpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
   return {
     name: `openai:${MODEL}`,
     async *stream(messages) {

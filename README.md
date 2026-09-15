@@ -19,7 +19,8 @@ npm run dev                        # http://localhost:3000
 
 可选环境变量：
 
-- `LEARNMATE_MODEL`：默认 `gpt-4o-mini`
+- `OPENAI_BASE_URL`：兼容 OpenAI 协议的中转/自建网关地址，例如 `https://apihub.agnes-ai.com/v1`
+- `LEARNMATE_MODEL`：默认 `gpt-4o-mini`（用 Agnes 网关时设为 `agnes-2.5-flash`）
 - `LEARNMATE_DATA_DIR`：SQLite 数据目录，默认 `./data`
 
 ## 结构
