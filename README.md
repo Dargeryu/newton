@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 学伴 (learnmate)
 
-## Getting Started
+面向零基础 / 低识字水平学习者的 AI 即时讲解助手。学习者在看视频、听音频、读文章的过程中随时卡住，选中看不懂的内容即可得到用他能接受的方式给出的解释，难度和语言风格会随对话持续自适应。
 
-First, run the development server:
+## 核心机制
+
+1. **学习者画像层**（`src/lib/db.ts`）：背景经历、学习目标、认知水平 L1–L5、语言风格偏好、可用于打比方的熟悉领域、时间/精力/身体限制。
+2. **即时讲解引擎**（`src/lib/prompts.ts` + `src/app/api/explain`）：拿到卡点词 + 原文上下文 + 画像 + 已掌握/未掌握概念，生成「一句话 / 打个比方 / 放回原文 / 确认一下」四段式解释，禁止用学习者尚未掌握的概念去解释新概念。
+3. **动态迭代层**（`src/lib/memory.ts`）：每轮对话后由模型抽取新的画像事实、概念掌握度变化和认知水平升降，写回数据库；也用关键词启发式兜底（例如「还是不懂」直接降一级）。
+4. **多媒介**：文字贴入、字幕文件（.srt/.vtt）导入、视频链接内嵌（YouTube / B 站）、浏览器语音输入与朗读。
+
+## 运行
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+export OPENAI_API_KEY=sk-...      # 不设置则进入演示（mock）模式
+npm run dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+可选环境变量：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `OPENAI_BASE_URL`：兼容 OpenAI 协议的中转/自建网关地址，例如 `https://apihub.agnes-ai.com/v1`
+- `LEARNMATE_MODEL`：默认 `gpt-4o-mini`（用 Agnes 网关时设为 `agnes-2.5-flash`）
+- `LEARNMATE_DATA_DIR`：SQLite 数据目录，默认 `./data`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 结构
 
-## Learn More
+```
+src/lib/llm.ts        可插拔模型引擎（OpenAI / mock）
+src/lib/prompts.ts    系统提示词与分级讲解规则
+src/lib/memory.ts     画像与掌握度的持续更新
+src/lib/db.ts         SQLite 持久化
+src/app/api/*         chat / explain / profile / materials / messages
+src/app/learn         三栏工作台：材料 · 对话 · 画像
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 当前限制
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 视频/音频不做自动转写，需要贴字幕或文本；接入 Whisper 即可补齐。
+- 单用户本地 SQLite，无鉴权，适合原型验证。
